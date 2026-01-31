@@ -13,5 +13,6 @@ class User(db.Model,SerializerMixin):
     full_name=db.Column(db.String, nullable=False)
     email=db.Column(db.String, unique=True, nullable=False)
     phone_number=db.Column(db.Integer, nullable=False)
+    password=db.Column(db.Integer, nullable=False)
     country=db.Column(db.String, nullable=False)
     role=db.Column(db.String, default="user", nullable=False)
