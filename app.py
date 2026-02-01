@@ -1,4 +1,4 @@
-from models import db, User
+from models import db, User, Balance
 from flask_migrate import Migrate
 from flask import Flask, request, make_response,jsonify
 from flask_restful import Api, Resource
@@ -7,6 +7,7 @@ import secrets,datetime,os,json
 from datetime import timedelta
 from flask_cors import CORS
 from werkzeug.security import check_password_hash,generate_password_hash
+from decimal import Decimal
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DATABASE = os.environ.get(
@@ -48,6 +49,15 @@ class SignUp(Resource):
                 return make_response({"msg":f"{email} is already registered"},400)
             new_user=User(full_name=full_name, email=email, phone_number=phone_number, password=password, country=country)
             db.session.add(new_user)
+            db.session.flush()   # 👈 generates new_user.id without committing
+
+        # ✅ Create balance with 0
+            balance = Balance(
+            user_id=new_user.id,
+            balance=0
+        )
+
+            db.session.add(balance)
             db.session.commit()
             return make_response(new_user.to_dict(),201)
         return make_response({"msg":"Invalid data entries"},400)
@@ -109,6 +119,61 @@ class Get_user(Resource):
     
 api.add_resource(Get_user,'/user/<int:id>')
 
+class GetBalance(Resource):
+    def get(self, user_id):
+        user = User.query.get_or_404(user_id)
+
+        if not user.balance:
+            return {
+                "user_id": user.id,
+                "balance": "0.00"
+            }, 200
+
+        return {
+            "user_id": user.id,
+            "balance": str(user.balance.balance)
+        }, 200
+        
+    def patch(self, user_id):
+        user = User.query.get_or_404(user_id)
+
+        if not user.balance:
+            return {"message": "Balance not found"}, 404
+
+        data = request.get_json()
+        amount = Decimal(data.get("amount", 0))
+
+        if amount == 0:
+            return {"message": "Amount must not be zero"}, 400
+
+        # Convert existing balance to Decimal
+        balance_amount = Decimal(user.balance.balance)
+
+        # Prevent negative balance
+        if balance_amount + amount < 0:
+            return {"message": "Insufficient balance"}, 400
+
+        # Update balance
+        user.balance.balance = balance_amount + amount
+        db.session.commit()
+
+        return {
+            "message": "Balance updated successfully",
+            "balance": str(user.balance.balance)
+        }, 200
+        
+    def delete(self, user_id):
+        user = User.query.get_or_404(user_id)
+
+        if not user.balance:
+            return {"message": "Balance not found"}, 404
+
+        db.session.delete(user.balance)
+        db.session.commit()
+
+        return {"message": "Balance deleted successfully"}, 200
+
+api.add_resource(GetBalance,'/users/<int:user_id>/balance')
 
 
 if __name__=="__main__":

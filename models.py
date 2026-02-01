@@ -19,6 +19,8 @@ class User(db.Model,SerializerMixin):
     
     balance = db.relationship('Balance', back_populates='user', uselist=False)
     
+    serialize_rules = ("-balance.user",)
+    
 class Balance(db.Model,SerializerMixin):
     __tablename__="balances"
     
@@ -27,3 +29,5 @@ class Balance(db.Model,SerializerMixin):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False)
     
     user = db.relationship('User', back_populates='balance')
+    
+    serialize_rules = ("-user.balance",)
