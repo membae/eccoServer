@@ -42,7 +42,7 @@ class SignUp(Resource):
         email=data.get("email")
         phone_number=data.get("phone_number")
         country=data.get("country")
-        password=generate_password_hash(data.get("password"))
+        password=(data.get("password"))
         if "@" in email and full_name and full_name!=" " and phone_number and phone_number!=" " and country and country!=" " and password and password!=" ":
             user=User.query.filter_by(email=email).first()
             if user:
@@ -71,7 +71,7 @@ class Login(Resource):
         if "@" in email and password:
             user=User.query.filter_by(email=email).first()
             if user:
-                if check_password_hash(user.password,password):
+                if (user.password,password):
                     access_token=create_access_token(identity=user.id)
                     refresh_token=create_refresh_token(identity=user.id)
                     return make_response({"user":user.to_dict(),"access_token":access_token,"refresh_token":refresh_token},200)
