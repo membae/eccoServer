@@ -17,7 +17,7 @@ class User(db.Model,SerializerMixin):
     country=db.Column(db.String, nullable=False)
     role=db.Column(db.String, default="user", nullable=False)
     
-    balance = db.relationship('Balance', back_populates='user', uselist=False)
+    balance = db.relationship('Balance', back_populates='user', uselist=False, cascade="all, delete-orphan")
     
     serialize_rules = ("-balance.user",)
     
