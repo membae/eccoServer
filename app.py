@@ -11,7 +11,9 @@ from decimal import Decimal
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DATABASE = os.environ.get(
-    "DB_URI", f"sqlite:///{os.path.join(BASE_DIR, 'app.db')}")
+    "DATABASE_URL",  # this is the environment variable you set in Render
+    "sqlite:///app.db"  # fallback for local dev
+)
 
 app = Flask(__name__)
 CORS(app)
