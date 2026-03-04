@@ -31,3 +31,9 @@ class Balance(db.Model,SerializerMixin):
     user = db.relationship('User', back_populates='balance')
     
     serialize_rules = ("-user.balance",)
+    
+class Wallet(db.Model, SerializerMixin):
+    __tablename__="wallets"
+    
+    id=db.Column(db.Integer, primary_key=True)
+    wallet=db.Column(db.String, nullable=False)
