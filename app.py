@@ -17,7 +17,7 @@ DATABASE = os.environ.get(
 
 app = Flask(__name__)
 CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://ecoserver_user:tSDVlZa8oHyT93fMDmWCDqI70d1kWpTi@dpg-d6i3367gi27c73875nm0-a.oregon-postgres.render.com/ecoserver"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] =secrets.token_hex(32)
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=30)
