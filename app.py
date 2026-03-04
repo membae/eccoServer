@@ -1,4 +1,4 @@
-from models import db, User, Balance
+from models import db, User, Balance, Wallet
 from flask_migrate import Migrate
 from flask import Flask, request, make_response,jsonify
 from flask_restful import Api, Resource
@@ -174,6 +174,64 @@ class GetBalance(Resource):
         return {"message": "Balance deleted successfully"}, 200
 
 api.add_resource(GetBalance,'/users/<int:user_id>/balance')
+
+class WalletList(Resource):
+    def get(self):
+        wallets = Wallet.query.all()
+        return [wallet.to_dict() for wallet in wallets], 200
+
+    def post(self):
+        data = request.get_json()
+
+        if not data or "wallet" not in data:
+            return {"error": "Wallet address is required"}, 400
+
+        new_wallet = Wallet(wallet=data["wallet"])
+
+        db.session.add(new_wallet)
+        db.session.commit()
+
+        return new_wallet.to_dict(), 201
+
+
+api.add_resource(WalletList, "/wallets")
+
+class WalletByID(Resource):
+    def get(self, id):
+        wallet = Wallet.query.get(id)
+
+        if not wallet:
+            return {"error": "Wallet not found"}, 404
+
+        return wallet.to_dict(), 200
+    
+    def patch(self, id):
+        wallet = Wallet.query.get(id)
+
+        if not wallet:
+            return {"error": "Wallet not found"}, 404
+
+        data = request.get_json()
+
+        if "wallet" in data:
+            wallet.wallet = data["wallet"]
+
+        db.session.commit()
+
+        return wallet.to_dict(), 200
+    
+    def delete(self, id):
+        wallet = Wallet.query.get(id)
+
+        if not wallet:
+            return {"error": "Wallet not found"}, 404
+
+        db.session.delete(wallet)
+        db.session.commit()
+
+        return {"message": "Wallet deleted successfully"}, 200
+api.add_resource(WalletByID, "/wallet/<int:id>")
+    
 
 
 
