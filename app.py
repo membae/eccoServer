@@ -49,7 +49,8 @@ class SignUp(Resource):
             user=User.query.filter_by(email=email).first()
             if user:
                 return make_response({"msg":f"{email} is already registered"},400)
-            new_user=User(full_name=full_name, email=email, phone_number=phone_number, password=password, country=country)
+            hashed_password = generate_password_hash(password)
+            new_user=User(full_name=full_name, email=email, phone_number=phone_number, password=hashed_password, country=country)
             db.session.add(new_user)
             db.session.flush()   # 👈 generates new_user.id without committing
 
@@ -67,22 +68,31 @@ api.add_resource(SignUp,'/signup')
 
 class Login(Resource):
     def post(self):
-        data=request.get_json()
-        email=data.get("email")
-        password=data.get("password")
-        if "@" in email and password:
-            user=User.query.filter_by(email=email).first()
-            if user:
-                if (user.password,password):
-                    access_token=create_access_token(identity=user.id)
-                    refresh_token=create_refresh_token(identity=user.id)
-                    return make_response({"user":user.to_dict(),"access_token":access_token,"refresh_token":refresh_token},200)
-                return make_response({"msg":"Incorrect password"},400)
-            return make_response({"msg":"email not registered"},404)
-        return make_response({"msg":"Invalid data"})
-api.add_resource(Login,'/login')
+        data = request.get_json()
+        email = data.get("email")
+        password = data.get("password")
 
+        if not email or not password:
+            return make_response({"msg": "Email and password are required"}, 400)
 
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return make_response({"msg": "Email not registered"}, 404)
+
+        # Correct password check
+        if not check_password_hash(user.password, password):
+            return make_response({"msg": "Incorrect password"}, 401)
+
+        # Generate JWT tokens
+        access_token = create_access_token(identity=user.id)
+        refresh_token = create_refresh_token(identity=user.id)
+
+        return make_response({
+            "user": user.to_dict(),
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        }, 200)
+api.add_resource(Login, '/login')
 class Get_users(Resource):
     def get(self):
         users=User.query.all()
